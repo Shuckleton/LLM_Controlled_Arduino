@@ -51,4 +51,6 @@ def inject_memory():
         facts.append(f"You share inside jokes: {', '.join(memory['inside_jokes'])}.")
     if memory.get("emotion"):
         facts.append(f"V.A.L is currently feeling {memory['emotion']}.")
+    if memory.get("user_emotion"):
+        facts.append(f"User is currently feeling {memory['emotion']}.")
     return "\n".join(facts)
