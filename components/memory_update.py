@@ -1,15 +1,23 @@
 import json
-
-from components.memory import memory, save_memory, update_memory, inject_memory, detect_emotion
+from components.memory import memory, save_memory, update_memory, inject_memory
 from components.model_setup import llm
-
 
 def user_input_contains_memory_trigger(user_input):
     triggers = [
         "i like", "i love", "i enjoy",
         "i hate", "i dislike", "i can't stand",
-        "my favorite food", "my name is"
-    ]
+        "my favorite food", "my name is",
+        "i am sad", "i feel sad", "i'm sad",  # Sadness triggers
+        "i am happy", "i feel happy", "i'm happy",  # Happiness triggers
+        "i am angry", "i feel angry", "i'm angry",  # Anger triggers
+        "i am frustrated", "i feel frustrated", "i'm frustrated",  # Frustration triggers
+        "i am excited", "i feel excited", "i'm excited",  # Excitement triggers
+        "i am scared", "i feel scared", "i'm scared",  # Fear triggers
+        "i am surprised", "i feel surprised", "i'm surprised",  # Surprise triggers
+        "i feel lonely", "i am lonely", "i'm lonely",  # Loneliness triggers
+        "i feel calm", "i am calm", "i'm calm",  # Calm triggers
+        "i feel relaxed", "i am relaxed", "i'm relaxed"  # Relaxation triggers
+        ]
     user_input = user_input.lower()
     return any(trigger in user_input for trigger in triggers)
 
@@ -21,7 +29,14 @@ def update_memory_from_response(user_input, full_reply):
 
     From this conversation, what new knowledge should be added to memory?
     ONLY reply with JSON like this:
-    {{'likes': [], 'dislikes': [], 'favorite_food': '', 'user_name': ''}}.
+    {{
+        'likes': [],
+        'dislikes': [],
+        'favorite_food': '',
+        'user_name': '',
+        'emotion': '',  # V.A.L.'s emotional state
+        'user_emotion': ''  # User's emotional state
+    }}
 
     IMPORTANT RULES:
     - Only update if user is very clear (e.g., "I love X", "I hate Y", "My favorite food is Z", "My name is ___")
@@ -31,7 +46,7 @@ def update_memory_from_response(user_input, full_reply):
 
     memory_update_response = llm.create_chat_completion(
         messages=[
-            {"role": "system", "content": "You are V.A.L., an AI girlfriend who updates her memory based on conversations."},
+            {"role": "system", "content": "You are V.A.L., an AI companion who updates her memory based on conversations."},
             {"role": "user", "content": memory_update_prompt}
         ],
         max_tokens=150,
@@ -81,6 +96,13 @@ def update_memory_from_response(user_input, full_reply):
 
         if memory_update_json.get("user_name"):
             memory["user_name"] = memory_update_json["user_name"]
+
+        # Update emotions
+        if memory_update_json.get("emotion"):
+            memory["emotion"] = memory_update_json["emotion"]
+
+        if memory_update_json.get("user_emotion"):
+            memory["user_emotion"] = memory_update_json["user_emotion"]
 
         # Fix contradictions
         memory["likes"] = [item for item in memory["likes"] if item not in memory["dislikes"]]
